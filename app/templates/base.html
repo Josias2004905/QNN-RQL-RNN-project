@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}QNN Volatility Predictor{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100">
+    <!-- Navbar -->
+    <nav class="bg-slate-950 backdrop-blur-md border-b border-slate-700 shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-brain text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">QNN</h1>
+                        <p class="text-xs text-gray-400">Volatility Predictor</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="text-gray-300 hover:text-white transition">Prédiction</a>
+                    <a href="/docs" class="text-gray-300 hover:text-white transition">API Docs</a>
+                    <a href="/about" class="text-gray-300 hover:text-white transition">À Propos</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="min-h-screen py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-700 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-3 gap-8">
+                <div>
+                    <h3 class="font-bold text-white mb-2">QNN Predictor</h3>
+                    <p class="text-gray-400 text-sm">Prédiction de volatilité financière avec IA</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-white mb-2">Liens</h4>
+                    <div class="space-y-1 text-sm">
+                        <a href="/" class="text-gray-400 hover:text-white transition">Accueil</a>
+                        <a href="/api/v1" class="text-gray-400 hover:text-white transition">API</a>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-gray-400 text-sm">© 2024 QNN Project. Tous droits réservés.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

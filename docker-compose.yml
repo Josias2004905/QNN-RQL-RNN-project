@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  qnn-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - API_HOST=0.0.0.0
+      - API_PORT=5000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs:/app/logs
+      - ./model:/app/model:ro
+      - ./data:/app/data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - qnn-network
+
+  # Optional: PostgreSQL for logging/monitoring
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=qnn_logs
+      - POSTGRES_USER=qnn_user
+      - POSTGRES_PASSWORD=qnn_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - qnn-network
+
+networks:
+  qnn-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

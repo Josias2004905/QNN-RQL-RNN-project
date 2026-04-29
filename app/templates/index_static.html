@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QNN Volatility Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <header class="mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                        <i class="fas fa-chart-line text-blue-600 mr-3"></i>
+                        QNN Volatility Predictor
+                    </h1>
+                    <p class="text-gray-600">Prédiction de volatilité financière utilisant des Quantile Neural Networks</p>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Input Form with Explanations -->
+                <section class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                            <i class="fas fa-edit text-green-600 mr-2"></i>
+                            Paramètres d'entrée
+                        </h2>
+                        <form id="predictionForm" class="space-y-6">
+                            <!-- Lag Variables Section -->
+                            <div class="space-y-4">
+                                <div class="p-3 bg-blue-50 rounded-lg">
+                                    <h3 class="font-semibold text-blue-800 mb-2">
+                                        <i class="fas fa-clock mr-2"></i>Variables de Lag
+                                    </h3>
+                                    <p class="text-sm text-gray-700 mb-3">
+                                        Les variables de lag capturent l'effet de mémoire de la volatilité passée.
+                                    </p>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Lag 1 <span class="text-xs text-gray-500">(Volatilité période t-1)</span>
+                                            </label>
+                                            <input type="number" id="lag1" step="0.01" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Lag 2 <span class="text-xs text-gray-500">(Volatilité période t-2)</span>
+                                            </label>
+                                            <input type="number" id="lag2" step="0.01" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Vol Lag 1 <span class="text-xs text-gray-500">(Volume volatilité t-1)</span>
+                                            </label>
+                                            <input type="number" id="vol_lag1" step="0.01" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Vol Lag 2 <span class="text-xs text-gray-500">(Volume volatilité t-2)</span>
+                                            </label>
+                                            <input type="number" id="vol_lag2" step="0.01" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Return Variables Section -->
+                            <div class="space-y-4">
+                                <div class="p-3 bg-green-50 rounded-lg">
+                                    <h3 class="font-semibold text-green-800 mb-2">
+                                        <i class="fas fa-chart-line mr-2"></i>Variables de Rendement
+                                    </h3>
+                                    <p class="text-sm text-gray-700 mb-3">
+                                        Les rendements mesurent les variations de prix, indicateurs clés de la volatilité.
+                                    </p>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Return Absolute <span class="text-xs text-gray-500">(Rendement absolu)</span>
+                                            </label>
+                                            <input type="number" id="ret_abs" step="0.001" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Return Squared <span class="text-xs text-gray-500">(Rendement au carré)</span>
+                                            </label>
+                                            <input type="number" id="ret_sq" step="0.0001" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Moving Average Section -->
+                            <div class="space-y-4">
+                                <div class="p-3 bg-purple-50 rounded-lg">
+                                    <h3 class="font-semibold text-purple-800 mb-2">
+                                        <i class="fas fa-wave-square mr-2"></i>Moyennes Mobiles
+                                    </h3>
+                                    <p class="text-sm text-gray-700 mb-3">
+                                        Les moyennes mobiles lissent les prix pour identifier les tendances.
+                                    </p>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                MA 5 <span class="text-xs text-gray-500">(Moyenne 5 jours)</span>
+                                            </label>
+                                            <input type="number" id="ma5" step="0.01" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                MA 20 <span class="text-xs text-gray-500">(Moyenne 20 jours)</span>
+                                            </label>
+                                            <input type="number" id="ma20" step="0.01" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Standard Deviation Section -->
+                            <div class="space-y-4">
+                                <div class="p-3 bg-orange-50 rounded-lg">
+                                    <h3 class="font-semibold text-orange-800 mb-2">
+                                        <i class="fas fa-chart-area mr-2"></i>Écarts Types
+                                    </h3>
+                                    <p class="text-sm text-gray-700 mb-3">
+                                        Les écarts-types mesurent directement la volatilité historique.
+                                    </p>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Std 5 <span class="text-xs text-gray-500">(Écart-type 5 jours)</span>
+                                            </label>
+                                            <input type="number" id="std5" step="0.01" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Std 20 <span class="text-xs text-gray-500">(Écart-type 20 jours)</span>
+                                            </label>
+                                            <input type="number" id="std20" step="0.01" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="flex space-x-4 pt-4">
+                                <button type="submit" 
+                                    class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700">
+                                    <i class="fas fa-play mr-2"></i>Prédire
+                                </button>
+                                <button type="button" id="explainBtn"
+                                    class="flex-1 bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700">
+                                    <i class="fas fa-lightbulb mr-2"></i>Expliquer
+                                </button>
+                                <button type="button" id="loadExampleBtn"
+                                    class="flex-1 bg-gray-600 text-white py-3 px-4 rounded-md hover:bg-gray-700">
+                                    <i class="fas fa-database mr-2"></i>Exemple
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Results Panel -->
+                <section class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                            <i class="fas fa-chart-bar text-purple-600 mr-2"></i>
+                            Résultats
+                        </h2>
+                        
+                        <div id="results" class="hidden">
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 p-4 rounded-lg">
+                                    <h3 class="font-semibold text-blue-800 mb-3">Quantiles de volatilité</h3>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-center p-2 bg-white rounded">
+                                            <span class="text-sm font-medium text-gray-600">Q10 (Borne inf.)</span>
+                                            <span class="text-lg font-bold text-blue-600" id="q10">-</span>
+                                        </div>
+                                        <div class="flex justify-between items-center p-2 bg-white rounded">
+                                            <span class="text-sm font-medium text-gray-600">Q50 (Médiane)</span>
+                                            <span class="text-lg font-bold text-blue-700" id="q50">-</span>
+                                        </div>
+                                        <div class="flex justify-between items-center p-2 bg-white rounded">
+                                            <span class="text-sm font-medium text-gray-600">Q90 (Borne sup.)</span>
+                                            <span class="text-lg font-bold text-blue-800" id="q90">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h3 class="font-semibold text-gray-800 mb-3">Visualisation</h3>
+                                    <canvas id="predictionChart" width="300" height="200"></canvas>
+                                </div>
+
+                                <div class="bg-emerald-50 p-4 rounded-lg">
+                                    <h3 class="font-semibold text-emerald-800 mb-2">Interprétation</h3>
+                                    <div class="text-sm text-gray-700 space-y-1">
+                                        <p>• <strong>Q10:</strong> Scénario pessimiste (10% des cas)</p>
+                                        <p>• <strong>Q50:</strong> Scénario le plus probable</p>
+                                        <p>• <strong>Q90:</strong> Scénario optimiste (90% des cas)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="noResults" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-chart-line text-4xl mb-4"></i>
+                            <p class="mb-4">Entrez les paramètres et cliquez sur "Prédire"</p>
+                            <button type="button" onclick="loadExample()" 
+                                class="text-blue-600 hover:text-blue-800 underline text-sm">
+                                Charger un exemple
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- SHAP Explanation -->
+            <section id="shapSection" class="mt-8 bg-white rounded-lg shadow-md p-6 hidden">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-microscope text-orange-600 mr-2"></i>
+                    Explication SHAP
+                </h2>
+                <div id="shapContent">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-800 mb-3">Importance des caractéristiques</h3>
+                            <canvas id="shapChart" width="400" height="300"></canvas>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 mb-3">Détails des contributions</h3>
+                            <div id="shapDetails" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Status -->
+            <footer class="mt-8">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div id="status" class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                <span class="text-sm text-gray-600">API connectée</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            QNN Volatility Predictor v1.0.0
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+        let predictionChart = null;
+        let shapChart = null;
+
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAPIHealth();
+            setupEventListeners();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('predictionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                makePrediction();
+            });
+
+            document.getElementById('explainBtn').addEventListener('click', function() {
+                makePrediction(true);
+            });
+
+            document.getElementById('loadExampleBtn').addEventListener('click', function() {
+                loadExample();
+            });
+        }
+
+        // Load example values
+        function loadExample() {
+            const exampleValues = {
+                lag1: 0.5, lag2: 0.3, vol_lag1: 0.4, vol_lag2: 0.35,
+                ret_abs: 0.02, ret_sq: 0.0004, ma5: 100.5, ma20: 101.2,
+                std5: 2.1, std20: 2.3
+            };
+            
+            Object.keys(exampleValues).forEach(key => {
+                document.getElementById(key).value = exampleValues[key];
+            });
+
+            alert('Exemple chargé avec succès !');
+        }
+
+        // Check API health
+        async function checkAPIHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('status');
+                if (data.status === 'healthy') {
+                    statusDiv.innerHTML = `
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <span class="text-sm text-gray-600">API connectée</span>
+                    `;
+                } else {
+                    throw new Error('API not healthy');
+                }
+            } catch (error) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = `
+                    <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                    <span class="text-sm text-gray-600">API déconnectée</span>
+                `;
+            }
+        }
+
+        // Make prediction
+        async function makePrediction(getExplanation = false) {
+            const formData = {};
+            const fields = ['lag1', 'lag2', 'vol_lag1', 'vol_lag2', 'ret_abs', 'ret_sq', 'ma5', 'ma20', 'std5', 'std20'];
+            
+            fields.forEach(field => {
+                formData[field] = parseFloat(document.getElementById(field).value);
+            });
+
+            try {
+                const endpoint = getExplanation ? `${API_BASE}/explain` : `${API_BASE}/predict`;
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                displayResults(data.prediction || data);
+                
+                if (data.explanation) {
+                    displaySHAPExplanation(data.explanation);
+                }
+
+                alert('Prédiction réalisée avec succès !');
+
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        // Display results
+        function displayResults(prediction) {
+            document.getElementById('q10').textContent = prediction.q10.toFixed(4);
+            document.getElementById('q50').textContent = prediction.q50.toFixed(4);
+            document.getElementById('q90').textContent = prediction.q90.toFixed(4);
+
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('noResults').classList.add('hidden');
+
+            updatePredictionChart(prediction);
+        }
+
+        // Update prediction chart
+        function updatePredictionChart(prediction) {
+            const ctx = document.getElementById('predictionChart').getContext('2d');
+            
+            if (predictionChart) {
+                predictionChart.destroy();
+            }
+
+            predictionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Q10', 'Q50', 'Q90'],
+                    datasets: [{
+                        label: 'Prédictions de volatilité',
+                        data: [prediction.q10, prediction.q50, prediction.q90],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.6)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(59, 130, 246, 1.0)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(59, 130, 246, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Display SHAP explanation
+        function displaySHAPExplanation(explanation) {
+            document.getElementById('shapSection').classList.remove('hidden');
+            
+            if (explanation.feature_importance) {
+                displaySHAPChart(explanation.feature_importance);
+                displaySHAPDetails(explanation.feature_importance);
+            }
+        }
+
+        // Display SHAP chart
+        function displaySHAPChart(featureImportance) {
+            const ctx = document.getElementById('shapChart').getContext('2d');
+            
+            if (shapChart) {
+                shapChart.destroy();
+            }
+
+            const features = Object.keys(featureImportance);
+            const values = Object.values(featureImportance);
+
+            shapChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: features,
+                    datasets: [{
+                        label: 'Importance SHAP',
+                        data: values,
+                        backgroundColor: 'rgba(251, 146, 60, 0.7)',
+                        borderColor: 'rgba(251, 146, 60, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Display SHAP details
+        function displaySHAPDetails(featureImportance) {
+            const detailsDiv = document.getElementById('shapDetails');
+            detailsDiv.innerHTML = '';
+
+            const sortedFeatures = Object.entries(featureImportance)
+                .sort(([,a], [,b]) => Math.abs(b) - Math.abs(a));
+
+            sortedFeatures.forEach(([feature, importance]) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
+                div.innerHTML = `
+                    <span class="text-sm font-medium">${feature}</span>
+                    <span class="text-sm ${importance > 0 ? 'text-green-600' : 'text-red-600'}">
+                        ${importance > 0 ? '+' : ''}${importance.toFixed(4)}
+                    </span>
+                `;
+                detailsDiv.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>

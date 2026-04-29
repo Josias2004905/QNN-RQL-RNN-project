@@ -1,0 +1,2 @@
+2026-04-29 14:49:25,465 - api - ERROR - Explanation error: 'NoneType' object has no attribute 'transform'
+2026-04-29 14:50:17,239 - api - ERROR - Explanation error: 'NoneType' object has no attribute 'transform'

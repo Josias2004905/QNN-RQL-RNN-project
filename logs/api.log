@@ -1,0 +1,4 @@
+2026-04-28 22:35:37,690 - api - ERROR - Failed to initialize application: Model file not found: C:\Users\josia\Downloads\QNN_Project\app\api\..\model\model_volatility.h5
+2026-04-28 22:37:23,218 - api - ERROR - Failed to initialize application: Could not deserialize 'keras.metrics.mse' because it is not a KerasSaveable subclass
+2026-04-28 22:38:11,618 - api - INFO - Application initialized successfully
+2026-04-28 22:48:00,742 - api - ERROR - Validation error: Missing features: {'ret_sq', 'vol_lag2', 'std5', 'ma5', 'ma20', 'ret_abs', 'vol_lag1', 'std20', 'lag2'}
