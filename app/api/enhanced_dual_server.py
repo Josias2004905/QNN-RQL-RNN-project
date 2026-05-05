@@ -151,6 +151,21 @@ def model_info():
         }
     }, 200
 
+@app.route('/shap/compare_all', methods=['POST'])
+def shap_compare_all():
+    """Compare SHAP analysis for all models"""
+    try:
+        data = request.get_json()
+        results = {}
+        
+        for model_name in ['qnn', 'rnn', 'rql']:
+            results[model_name] = generate_shap_explanation_with_timeout(data, model_name)
+        
+        return jsonify(results)
+    except Exception as e:
+        logger.error(f"Compare all SHAP error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 def generate_prediction(data, model_type):
     """Generate mock prediction based on model type and input data"""
     try:
