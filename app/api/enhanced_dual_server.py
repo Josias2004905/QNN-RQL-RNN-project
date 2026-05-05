@@ -11,6 +11,47 @@ import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 import logging
 
+# Add parent directories to path for imports
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'core'))
+sys.path.append('../..')
+sys.path.append('../../model')
+
+# Import enhanced model loader
+try:
+    from enhanced_model_loader import EnhancedModelLoader, initialize_enhanced_models
+    from qnn_modified import QNNModified
+    from rqn_model import RQNModel
+    enhanced_loader = initialize_enhanced_models()
+    
+    # Log model loading status
+    if enhanced_loader:
+        logger.info("Enhanced model loader initialized successfully")
+        
+        # Check individual model status
+        qnn_loaded = enhanced_loader.is_model_loaded('qnn_modified')
+        rql_loaded = enhanced_loader.is_model_loaded('rqn')
+        rnn_loaded = enhanced_loader.is_model_loaded('rnn')
+        
+        logger.info(f"QNN model loaded: {qnn_loaded}")
+        logger.info(f"RQL model loaded: {rql_loaded}")
+        logger.info(f"RNN model loaded: {rnn_loaded}")
+        
+        if not qnn_loaded:
+            logger.error("QNN model failed to load - will use fallback predictions")
+        if not rql_loaded:
+            logger.error("RQL model failed to load - will use fallback predictions")
+        if not rnn_loaded:
+            logger.error("RNN model failed to load - will use fallback predictions")
+    else:
+        logger.error("Enhanced model loader initialization failed")
+        
+except ImportError as e:
+    logger.error(f"Error importing enhanced model loader: {e}")
+    enhanced_loader = None
+    QNNModified = None
+    RQNModel = None
+
 # Initialize Flask app
 app = Flask(__name__, template_folder='../templates')
 
@@ -77,17 +118,23 @@ def get_current_model():
 
 @app.route('/api/models/compare', methods=['POST'])
 def compare_models():
-    """Get predictions from both models for comparison"""
+    """Get predictions from all three models for comparison"""
     data = request.get_json()
     
-    # Generate predictions for both models
-    qnn_result = generate_prediction(data, 'qnn')
-    rnn_result = generate_prediction(data, 'rnn')
-    
-    return {
-        'qnn': qnn_result,
-        'rnn': rnn_result
-    }
+    try:
+        # Get predictions from all three models
+        qnn_result = generate_prediction(data, 'qnn')
+        rnn_result = generate_prediction(data, 'rnn')
+        rql_result = generate_prediction(data, 'rql')
+        
+        return {
+            'qnn': qnn_result,
+            'rnn': rnn_result,
+            'rql': rql_result
+        }
+    except Exception as e:
+        logger.error(f"Model comparison error: {e}")
+        return {'error': f'Comparison error: {str(e)}'}, 500
 
 @app.route('/api/v1/health')
 def health_check():
@@ -167,16 +214,68 @@ def shap_compare_all():
         return jsonify({'error': str(e)}), 500
 
 def generate_prediction(data, model_type):
-    """Generate mock prediction based on model type and input data"""
+    """Generate prediction using real models"""
+    try:
+        # Check if enhanced loader is available
+        if enhanced_loader is None:
+            logger.error("Enhanced model loader not available")
+            return generate_fallback_prediction(data, model_type)
+        
+        # Map model types
+        model_mapping = {
+            'qnn': 'qnn_modified',
+            'rql': 'rqn', 
+            'rnn': 'rnn'
+        }
+        
+        target_model = model_mapping.get(model_type, model_type)
+        
+        # Check if model is loaded
+        if not enhanced_loader.is_model_loaded(target_model):
+            logger.error(f"Model {target_model} not loaded")
+            return generate_fallback_prediction(data, model_type)
+        
+        # Switch to target model
+        enhanced_loader.set_active_model(target_model)
+        
+        # Convert data to DataFrame format
+        if isinstance(data, dict):
+            # Convert dict to array format
+            feature_names = ['lag1', 'lag2', 'vol_lag1', 'vol_lag2', 'ret_abs', 'ret_sq', 'ma5', 'ma20', 'std5', 'std20']
+            input_data = [data.get(feature, 0) for feature in feature_names]
+        else:
+            input_data = data
+        
+        # Create DataFrame
+        import pandas as pd
+        df = pd.DataFrame([input_data])
+        
+        # Get prediction
+        result = enhanced_loader.predict(df)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Real model prediction error for {model_type}: {e}")
+        return generate_fallback_prediction(data, model_type)
+
+def generate_fallback_prediction(data, model_type):
+    """Generate fallback prediction when real models fail"""
     try:
         # Base volatility calculation
         base_volatility = 0.15
         
         # Adjust based on input features
         if data:
-            lag_influence = (data.get('lag1', 0) + data.get('lag2', 0)) * 0.1
-            vol_influence = (data.get('vol_lag1', 0) + data.get('vol_lag2', 0)) * 0.15
-            ret_influence = data.get('ret_abs', 0) * 2.0
+            if isinstance(data, dict):
+                lag_influence = (data.get('lag1', 0) + data.get('lag2', 0)) * 0.1
+                vol_influence = (data.get('vol_lag1', 0) + data.get('vol_lag2', 0)) * 0.15
+                ret_influence = data.get('ret_abs', 0) * 2.0
+            else:
+                # Assume array format
+                lag_influence = (data[0] + data[1]) * 0.1 if len(data) > 1 else 0
+                vol_influence = (data[2] + data[3]) * 0.15 if len(data) > 3 else 0
+                ret_influence = data[4] * 2.0 if len(data) > 4 else 0
             
             base_volatility += lag_influence + vol_influence + ret_influence
             base_volatility = max(0.05, min(0.5, base_volatility))
@@ -187,6 +286,11 @@ def generate_prediction(data, model_type):
             q10 = base_volatility * 0.82
             q50 = base_volatility * 0.95
             q90 = base_volatility * 1.18
+        elif model_type == 'rql':
+            # RQL tends to be balanced
+            q10 = base_volatility * 0.80
+            q50 = base_volatility * 1.00
+            q90 = base_volatility * 1.20
         else:  # RNN
             # RNN tends to be more aggressive
             q10 = base_volatility * 0.78
@@ -200,13 +304,13 @@ def generate_prediction(data, model_type):
         q90 += random.uniform(-noise, noise)
         
         return {
-            'q10': round(q10, 4),
-            'q50': round(q50, 4),
-            'q90': round(q90, 4),
-            'model_type': model_type.upper()
+            'quantile_0.1': [round(q10, 6)],
+            'quantile_0.5': [round(q50, 6)],
+            'quantile_0.9': [round(q90, 6)]
         }
         
     except Exception as e:
+        logger.error(f"Fallback prediction error: {e}")
         return {'error': f'Prediction error: {str(e)}'}
 
 def generate_shap_explanation_with_timeout(data, model_type, timeout_seconds=30):
