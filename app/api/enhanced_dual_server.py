@@ -170,12 +170,26 @@ def explain():
     
     try:
         # Generate prediction first
+        logger.info(f"Generating prediction for model: {current_model}")
         result = generate_prediction(data, current_model)
         result['model_used'] = current_model
         
+        # Log prediction result
+        if 'error' in result:
+            logger.error(f"Prediction failed for {current_model}: {result['error']}")
+        else:
+            logger.info(f"Prediction successful for {current_model}")
+        
         # Generate SHAP explanation with timeout protection
+        logger.info("Generating SHAP explanation...")
         explanation = generate_shap_explanation_with_timeout(data, current_model)
         result['explanation'] = explanation
+        
+        # Log SHAP result
+        if 'feature_importance' in explanation:
+            logger.info(f"SHAP explanation generated successfully for {current_model}")
+        else:
+            logger.warning(f"SHAP explanation failed or using fallback for {current_model}")
         
         return result
         
@@ -206,13 +220,43 @@ def model_info():
 
 @app.route('/shap/compare_all', methods=['POST'])
 def shap_compare_all():
-    """Compare SHAP analysis for all models"""
+    """Compare SHAP analysis for all models - DISABLED TEMPORAIREMENT"""
     try:
         data = request.get_json()
-        results = {}
         
-        for model_name in ['qnn', 'rnn', 'rql']:
-            results[model_name] = generate_shap_explanation_with_timeout(data, model_name)
+        # Retourner des explications factices pour éviter le timeout
+        results = {
+            'qnn': {
+                'feature_importance': {
+                    'lag1': 0.025, 'lag2': 0.018, 'vol_lag1': 0.032, 'vol_lag2': 0.028,
+                    'ret_abs': 0.015, 'ret_sq': 0.012, 'ma5': 0.022, 'ma20': 0.035, 'std5': 0.020, 'std20': 0.030
+                },
+                'explainer_type': 'Mock (SHAP désactivé pour éviter timeout)',
+                'computation_time': '0.1s',
+                'model_type': 'QNN',
+                'note': 'SHAP désactivé temporairement - problème de timeout sur Render'
+            },
+            'rnn': {
+                'feature_importance': {
+                    'lag1': 0.020, 'lag2': 0.015, 'vol_lag1': 0.025, 'vol_lag2': 0.022,
+                    'ret_abs': 0.018, 'ret_sq': 0.014, 'ma5': 0.025, 'ma20': 0.040, 'std5': 0.018, 'std20': 0.025
+                },
+                'explainer_type': 'Mock (SHAP désactivé pour éviter timeout)',
+                'computation_time': '0.1s',
+                'model_type': 'RNN',
+                'note': 'SHAP désactivé temporairement - problème de timeout sur Render'
+            },
+            'rql': {
+                'feature_importance': {
+                    'lag1': 0.022, 'lag2': 0.016, 'vol_lag1': 0.028, 'vol_lag2': 0.024,
+                    'ret_abs': 0.016, 'ret_sq': 0.013, 'ma5': 0.024, 'ma20': 0.038, 'std5': 0.019, 'std20': 0.026
+                },
+                'explainer_type': 'Mock (SHAP désactivé pour éviter timeout)',
+                'computation_time': '0.1s',
+                'model_type': 'RQL',
+                'note': 'SHAP désactivé temporairement - problème de timeout sur Render'
+            }
+        }
         
         return jsonify(results)
     except Exception as e:
