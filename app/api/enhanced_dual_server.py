@@ -8,6 +8,7 @@ import os
 # Add parent directories to path for imports - MUST be BEFORE other imports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'core'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'api'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'model'))
 sys.path.append('../..')
 sys.path.append('../../model')
 
