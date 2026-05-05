@@ -827,7 +827,7 @@
                         })
                     });
                 } else {
-                    endpoint = getExplanation ? '/predictions/explain' : '/predictions/predict';
+                    endpoint = getExplanation ? '/api/v1/explain' : '/api/v1/predict';
                     data = await fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
