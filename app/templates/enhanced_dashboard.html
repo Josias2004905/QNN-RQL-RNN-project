@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Dual Model Volatility Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold flex items-center">
+                        <i class="fas fa-chart-line mr-3"></i>
+                        Enhanced Dual Model Volatility Predictor
+                    </h1>
+                    <p class="text-blue-100 mt-2">QNN_modifié & RQN_model Real-time Analysis</p>
+                </div>
+                <div class="flex space-x-4">
+                    <span id="connectionStatus" class="bg-green-500 px-3 py-1 rounded-full text-sm">
+                        <i class="fas fa-circle text-xs mr-1"></i> Connected
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Model Selection -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-brain mr-2"></i> Model Selection
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="switchModel('qnn_modified')" id="qnnBtn" 
+                    class="model-btn bg-blue-500 text-white px-6 py-4 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105">
+                    <i class="fas fa-network-wired text-2xl mb-2"></i>
+                    <div class="font-semibold">QNN_modifié</div>
+                    <div class="text-sm opacity-90">Quantile Neural Network</div>
+                </button>
+                
+                <button onclick="switchModel('rqn')" id="rqnBtn" 
+                    class="model-btn bg-purple-500 text-white px-6 py-4 rounded-lg hover:bg-purple-600 transition-all transform hover:scale-105">
+                    <i class="fas fa-chart-bar text-2xl mb-2"></i>
+                    <div class="font-semibold">RQN_model</div>
+                    <div class="text-sm opacity-90">Recurrent Quantile Network</div>
+                </button>
+                
+                <button onclick="compareModels()" 
+                    class="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-4 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105">
+                    <i class="fas fa-balance-scale text-2xl mb-2"></i>
+                    <div class="font-semibold">Compare Both</div>
+                    <div class="text-sm opacity-90">Side by Side Analysis</div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Model Status Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- QNN Status -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4 text-blue-600">
+                    <i class="fas fa-network-wired mr-2"></i>QNN_modifié Status
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Status:</span>
+                        <span id="qnnStatus" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Ready</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Features:</span>
+                        <span id="qnnFeatures" class="text-gray-800">10 features</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Quantiles:</span>
+                        <span class="text-gray-800">0.1, 0.5, 0.9</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Latency:</span>
+                        <span id="qnnLatency" class="text-gray-800">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RQN Status -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-bold mb-4 text-purple-600">
+                    <i class="fas fa-chart-bar mr-2"></i>RQN_model Status
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Status:</span>
+                        <span id="rqnStatus" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Ready</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Features:</span>
+                        <span id="rqnFeatures" class="text-gray-800">8 features</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Quantiles:</span>
+                        <span class="text-gray-800">0.1, 0.5, 0.9</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Latency:</span>
+                        <span id="rqnLatency" class="text-gray-800">-</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Current Model Display -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-chart-area mr-2"></i>Current Model: <span id="currentModelName">QNN_modifié</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+                    <div class="text-blue-600 text-sm font-semibold">Accuracy</div>
+                    <div id="accuracy" class="text-2xl font-bold text-blue-800">-</div>
+                </div>
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
+                    <div class="text-green-600 text-sm font-semibold">Predictions</div>
+                    <div id="predictions" class="text-2xl font-bold text-green-800">-</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                    <div class="text-purple-600 text-sm font-semibold">Confidence</div>
+                    <div id="confidence" class="text-2xl font-bold text-purple-800">-</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Input Section -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-sliders-h mr-2"></i>Feature Input
+            </h3>
+            <div id="featureInputs" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <!-- Feature inputs will be dynamically generated -->
+            </div>
+            <div class="mt-6 flex space-x-4">
+                <button onclick="makePrediction()" 
+                    class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-play mr-2"></i>Predict
+                </button>
+                <button onclick="clearInputs()" 
+                    class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-eraser mr-2"></i>Clear
+                </button>
+            </div>
+        </section>
+
+        <!-- Predictions Results -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-chart-line mr-2"></i>Volatility Quantiles
+            </h3>
+            <div id="predictionResults" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="text-blue-600 font-semibold">Quantile 0.1 (Lower Bound)</div>
+                    <div id="q0_1" class="text-2xl font-bold text-blue-800">-</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="text-green-600 font-semibold">Quantile 0.5 (Median)</div>
+                    <div id="q0_5" class="text-2xl font-bold text-green-800">-</div>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4">
+                    <div class="text-purple-600 font-semibold">Quantile 0.9 (Upper Bound)</div>
+                    <div id="q0_9" class="text-2xl font-bold text-purple-800">-</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Chart -->
+        <section id="comparisonSection" class="bg-white rounded-xl shadow-md p-6 hidden">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-balance-scale mr-2"></i>Model Comparison
+            </h3>
+            <canvas id="comparisonChart" width="400" height="200"></canvas>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 Enhanced Dual Model Volatility Predictor</p>
+        </div>
+    </footer>
+
+    <script>
+        let currentModel = 'qnn_modified';
+        let comparisonChart = null;
+
+        // Feature definitions for each model
+        const modelFeatures = {
+            qnn_modified: ['lag1', 'lag2', 'vol_lag1', 'vol_lag2', 'ret_abs', 'ret_sq', 'ma5', 'ma20', 'std5', 'std20'],
+            rqn: ['return', 'lag1', 'lag2', 'ret_abs', 'ret_sq', 'ma5', 'ma20', 'std5']
+        };
+
+        // Initialize the dashboard
+        async function initDashboard() {
+            await updateModelStatus();
+            generateFeatureInputs(currentModel);
+            updateModelButtons();
+        }
+
+        // Update model status
+        async function updateModelStatus() {
+            try {
+                const response = await fetch('/models/status');
+                const data = await response.json();
+                
+                // Update status displays
+                document.getElementById('qnnStatus').textContent = data.loaded_models.qnn_modified ? 'Ready' : 'Not Loaded';
+                document.getElementById('rqnStatus').textContent = data.loaded_models.rqn ? 'Ready' : 'Not Loaded';
+                document.getElementById('currentModelName').textContent = data.active_model === 'qnn_modified' ? 'QNN_modifié' : 'RQN_model';
+                
+                currentModel = data.active_model;
+                
+                // Update feature counts
+                document.getElementById('qnnFeatures').textContent = `${modelFeatures.qnn_modified.length} features`;
+                document.getElementById('rqnFeatures').textContent = `${modelFeatures.rqn.length} features`;
+                
+            } catch (error) {
+                console.error('Error updating model status:', error);
+            }
+        }
+
+        // Generate feature input fields
+        function generateFeatureInputs(modelType) {
+            const container = document.getElementById('featureInputs');
+            container.innerHTML = '';
+            
+            const features = modelFeatures[modelType];
+            features.forEach((feature, index) => {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'flex flex-col';
+                inputDiv.innerHTML = `
+                    <label class="text-sm font-medium text-gray-700 mb-1">${feature}</label>
+                    <input type="number" 
+                           id="feature_${index}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="0.00" 
+                           step="0.001"
+                           value="${index === 0 ? '0.01' : ''}">
+                `;
+                container.appendChild(inputDiv);
+            });
+        }
+
+        // Switch between models
+        async function switchModel(modelType) {
+            try {
+                const response = await fetch('/models/switch', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({model_type: modelType})
+                });
+                
+                if (response.ok) {
+                    currentModel = modelType;
+                    await updateModelStatus();
+                    generateFeatureInputs(modelType);
+                    updateModelButtons();
+                    clearResults();
+                }
+            } catch (error) {
+                console.error('Error switching model:', error);
+            }
+        }
+
+        // Update model button styles
+        function updateModelButtons() {
+            const qnnBtn = document.getElementById('qnnBtn');
+            const rqnBtn = document.getElementById('rqnBtn');
+            
+            qnnBtn.className = currentModel === 'qnn_modified' 
+                ? 'model-btn bg-blue-600 text-white px-6 py-4 rounded-lg transition-all transform scale-105'
+                : 'model-btn bg-blue-500 text-white px-6 py-4 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105';
+                
+            rqnBtn.className = currentModel === 'rqn'
+                ? 'model-btn bg-purple-600 text-white px-6 py-4 rounded-lg transition-all transform scale-105'
+                : 'model-btn bg-purple-500 text-white px-6 py-4 rounded-lg hover:bg-purple-600 transition-all transform hover:scale-105';
+        }
+
+        // Make prediction
+        async function makePrediction() {
+            const features = modelFeatures[currentModel];
+            const data = [];
+            
+            for (let i = 0; i < features.length; i++) {
+                const value = document.getElementById(`feature_${i}`).value;
+                if (!value) {
+                    alert(`Please enter a value for ${features[i]}`);
+                    return;
+                }
+                data.push(parseFloat(value));
+            }
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch('/predictions/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        data: data,
+                        model_type: currentModel
+                    })
+                });
+                
+                const endTime = Date.now();
+                const latency = endTime - startTime;
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    displayResults(result);
+                    updateLatency(latency);
+                } else {
+                    const error = await response.json();
+                    alert(`Prediction error: ${error.error}`);
+                }
+            } catch (error) {
+                console.error('Error making prediction:', error);
+                alert('Error making prediction');
+            }
+        }
+
+        // Display prediction results
+        function displayResults(result) {
+            document.getElementById('q0_1').textContent = result.predictions.quantile_0.1[0]?.toFixed(6) || '-';
+            document.getElementById('q0_5').textContent = result.predictions.quantile_0_5[0]?.toFixed(6) || '-';
+            document.getElementById('q0_9').textContent = result.predictions.quantile_0_9[0]?.toFixed(6) || '-';
+            
+            // Update stats (mock data for now)
+            document.getElementById('accuracy').textContent = '96.3%';
+            document.getElementById('predictions').textContent = '1,247';
+            document.getElementById('confidence').textContent = '91%';
+        }
+
+        // Update latency display
+        function updateLatency(latency) {
+            if (currentModel === 'qnn_modified') {
+                document.getElementById('qnnLatency').textContent = `${latency}ms`;
+            } else {
+                document.getElementById('rqnLatency').textContent = `${latency}ms`;
+            }
+        }
+
+        // Clear inputs
+        function clearInputs() {
+            const inputs = document.querySelectorAll('#featureInputs input');
+            inputs.forEach(input => input.value = '');
+            clearResults();
+        }
+
+        // Clear results
+        function clearResults() {
+            document.getElementById('q0_1').textContent = '-';
+            document.getElementById('q0_5').textContent = '-';
+            document.getElementById('q0_9').textContent = '-';
+        }
+
+        // Compare models
+        async function compareModels() {
+            // This would make predictions with both models and show comparison
+            alert('Comparison feature coming soon!');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>

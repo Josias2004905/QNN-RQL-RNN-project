@@ -1,0 +1,10 @@
+.venv
+venv
+__pycache__
+.pytest_cache
+*.pyc
+.sixth
+logs/
+tests/
+.env
+*.md

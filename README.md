@@ -1,12 +1,12 @@
-# 🧠 Quantile Neural Networks - Volatility Prediction Application
+# 🧠 Triple Model Volatility Prediction Application
 
-> **Modern, Production-Ready Application for Financial Volatility Prediction using Quantile Neural Networks with Beautiful Web Interface**
+> **Modern, Production-Ready Application for Financial Volatility Prediction using QNN, RNN, and RQL Models with Beautiful Web Interface**
 
 ---
 
 ## ✨ Features
 
-- ✅ **Advanced QNN Model** - Trained on financial time series data
+- ✅ **Advanced Triple Model Architecture** - QNN, RNN, and RQL models trained on financial time series data
 - ✅ **Beautiful Modern Interface** - Dark theme with responsive design
 - ✅ **REST API** - Fully documented Flask-based API with Swagger
 - ✅ **Explainability** - SHAP integration for model interpretability
@@ -58,12 +58,27 @@ pip install -r requirements.txt
 
 ### 2. Running the Application
 
+**Option A: Docker (Recommended)**
+
+```bash
+# Builder l'image
+docker build -t triple-volatility-predictor .
+
+# Lancer avec docker-compose (recommandé)
+docker-compose up --build
+
+# OU lancer directement
+docker run -p 5000:5000 triple-volatility-predictor
+```
+
+**Option B: Local Development**
+
 ```bash
 # Navigate to app API directory
 cd app/api
 
 # Run Flask API
-python flask_api.py
+python enhanced_dual_api.py
 
 # Open in browser
 # Web Interface: http://localhost:5000
