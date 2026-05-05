@@ -2,11 +2,16 @@
 Enhanced Dual Model Server with proper SHAP support for both QNN and RNN
 """
 
-import logging
-import os
 import sys
+import os
 
-# Setup logging - MUST be defined BEFORE any use
+# Add parent directories to path for imports - MUST be BEFORE other imports
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'core'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'api'))
+sys.path.append('../..')
+sys.path.append('../../model')
+
+import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -16,12 +21,6 @@ import numpy as np
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
-
-# Add parent directories to path for imports
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'core'))
-sys.path.append('../..')
-sys.path.append('../../model')
 
 # Import enhanced model loader
 try:
