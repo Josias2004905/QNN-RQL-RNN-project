@@ -110,8 +110,19 @@ class RNNPredictor:
             # Prepare input
             sequence = self._prepare_input_data(input_data)
             
+            # Scale input features before prediction
+            if self.scaler_X:
+                sequence_scaled = self.scaler_X.transform(sequence)
+            else:
+                sequence_scaled = sequence
+            
+            logger.info(f"RNN input shape: {sequence_scaled.shape}")
+            logger.info(f"RNN input range: [{sequence_scaled.min():.6f}, {sequence_scaled.max():.6f}]")
+            
             # Make prediction
-            prediction_scaled = self.model.predict(sequence, verbose=0)
+            prediction_scaled = self.model.predict(sequence_scaled, verbose=0)
+            
+            logger.info(f"RNN prediction (scaled): {prediction_scaled}")
             
             # Inverse transform to get actual values
             if self.scaler_y:

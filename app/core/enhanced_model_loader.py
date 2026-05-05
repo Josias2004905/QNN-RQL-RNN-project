@@ -69,6 +69,28 @@ class EnhancedModelLoader:
             model_base_path = project_root  # QNN models are in root directory
             scaler_path = os.path.join(project_root, scaler_path)
             
+            # Log absolute paths for debugging
+            logger.info(f"Loading QNN from: {os.path.abspath(model_base_path)}")
+            logger.info(f"Loading QNN scaler from: {os.path.abspath(scaler_path)}")
+            
+            # Check if files exist
+            qnn_files = [
+                os.path.join(model_base_path, "model_qnn_modified_0.1.keras"),
+                os.path.join(model_base_path, "model_qnn_modified_0.5.keras"),
+                os.path.join(model_base_path, "model_qnn_modified_0.9.keras")
+            ]
+            
+            for qnn_file in qnn_files:
+                if not os.path.exists(qnn_file):
+                    logger.error(f"QNN model file not found: {qnn_file}")
+                else:
+                    logger.info(f"QNN model file found: {qnn_file}")
+            
+            if not os.path.exists(scaler_path):
+                logger.error(f"QNN scaler file not found: {scaler_path}")
+            else:
+                logger.info(f"QNN scaler file found: {scaler_path}")
+            
             self._qnn_model = QNNModified()
             self._qnn_model.load_models(model_base_path, scaler_path)
             
@@ -92,6 +114,21 @@ class EnhancedModelLoader:
             # Update paths to be relative to project root
             model_path = os.path.join(project_root, model_path)
             scaler_path = os.path.join(project_root, scaler_path)
+            
+            # Log absolute paths for debugging
+            logger.info(f"Loading RQL from: {os.path.abspath(model_path)}")
+            logger.info(f"Loading RQL scaler from: {os.path.abspath(scaler_path)}")
+            
+            # Check if files exist
+            if not os.path.exists(model_path):
+                logger.error(f"RQL model file not found: {model_path}")
+            else:
+                logger.info(f"RQL model file found: {model_path}")
+            
+            if not os.path.exists(scaler_path):
+                logger.error(f"RQL scaler file not found: {scaler_path}")
+            else:
+                logger.info(f"RQL scaler file found: {scaler_path}")
             
             self._rqn_model = RQNModel()
             self._rqn_model.load_models(model_path, scaler_path)
