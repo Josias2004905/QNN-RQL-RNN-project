@@ -3,12 +3,13 @@ RNN Volatility Predictor Service
 Handles RNN model loading, preprocessing, and predictions
 """
 
+import logging
 import numpy as np
 import joblib
 import tensorflow as tf
 from typing import Dict, List, Tuple, Optional
-import logging
 
+# Setup logging
 logger = logging.getLogger(__name__)
 
 class RNNPredictor:

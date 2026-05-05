@@ -3,19 +3,20 @@ QNN Modifié - Enhanced Quantile Neural Network
 Based on the qnn_modifié.ipynb implementation
 """
 
+import logging
 import os
 import pandas as pd
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential, load_model
+
+# Setup logging
+logger = logging.getLogger(__name__)
 from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import joblib
-import logging
-
-logger = logging.getLogger(__name__)
 
 def quantile_loss(q):
     def loss(y_true, y_pred):

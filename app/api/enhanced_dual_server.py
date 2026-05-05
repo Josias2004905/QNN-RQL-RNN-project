@@ -2,14 +2,20 @@
 Enhanced Dual Model Server with proper SHAP support for both QNN and RNN
 """
 
+import logging
+import os
+import sys
+
+# Setup logging - MUST be defined BEFORE any use
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 from flask import Flask, request, jsonify, render_template
 import random
-import os
 import numpy as np
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
-import logging
 
 # Add parent directories to path for imports
 import sys

@@ -3,16 +3,17 @@ RQN Model - Recurrent Quantile Network
 Based on the RQN_model.ipynb implementation
 """
 
+import logging
 import os
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from sklearn.preprocessing import StandardScaler
+
+# Setup logging
+logger = logging.getLogger(__name__)
 import joblib
 import pickle
-import logging
-
-logger = logging.getLogger(__name__)
 
 class RQNModel:
     def __init__(self):
