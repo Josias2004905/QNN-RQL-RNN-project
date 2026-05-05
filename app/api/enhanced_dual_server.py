@@ -348,9 +348,10 @@ def generate_fallback_shap_explanation(data, model_type):
     }
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     print("🚀 Starting Enhanced Dual Model Volatility Predictor")
-    print("📊 Web interface will be available at: http://localhost:5000")
+    print(f"📊 Web interface will be available at: http://localhost:{port}")
     print("🔄 Dual model system with optimized SHAP support")
     print("✅ Enhanced error handling and timeout protection")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
