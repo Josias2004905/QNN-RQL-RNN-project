@@ -16,6 +16,7 @@ import sys
 # Add model directory to path
 sys.path.append('../../model')
 sys.path.append('../core')
+sys.path.append('../../model')
 
 try:
     from qnn_modified import QNNModified, QuantileLoss
@@ -54,7 +55,7 @@ class EnhancedModelLoader:
             self._model_type = None
             self.initialized = True
     
-    def load_qnn_modified(self, model_base_path: str = "model_qnn_modified", scaler_path: str = "scaler_qnn_modified.pkl"):
+    def load_qnn_modified(self, model_base_path: str = ".", scaler_path: str = "scaler_qnn_modified.pkl"):
         """Load QNN_modifié models"""
         try:
             if QNNModified is None:
@@ -65,7 +66,7 @@ class EnhancedModelLoader:
             project_root = os.path.dirname(os.path.dirname(current_dir))
             
             # Update paths to be relative to project root
-            model_base_path = os.path.join(project_root, model_base_path)
+            model_base_path = project_root  # QNN models are in root directory
             scaler_path = os.path.join(project_root, scaler_path)
             
             self._qnn_model = QNNModified()
@@ -102,7 +103,7 @@ class EnhancedModelLoader:
             logger.error(f"Error loading RQN_model: {str(e)}")
             return False
     
-    def load_rnn_model(self, model_path: str = "model/rnn_model.h5", scaler_path: str = "model/scaler.pkl"):
+    def load_rnn_model(self, model_path: str = "model/model_volatility.h5", scaler_path: str = "scaler_rqn.pkl"):
         """Load RNN model"""
         try:
             if RNNPredictor is None:

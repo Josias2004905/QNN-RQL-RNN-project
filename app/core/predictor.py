@@ -6,7 +6,7 @@ import logging
 from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
-from .model_loader import ModelLoader
+from core.model_loader import ModelLoader
 
 logger = logging.getLogger(__name__)
 

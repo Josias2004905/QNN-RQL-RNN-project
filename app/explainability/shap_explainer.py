@@ -7,7 +7,7 @@ from typing import Dict, Tuple
 import numpy as np
 import pandas as pd
 import shap
-from ..core.model_loader import ModelLoader
+from core.model_loader import ModelLoader
 
 logger = logging.getLogger(__name__)
 

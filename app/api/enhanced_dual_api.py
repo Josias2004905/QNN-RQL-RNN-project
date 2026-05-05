@@ -20,11 +20,11 @@ sys.path.append('../../model')
 
 # Import enhanced model loader
 try:
-    from enhanced_model_loader import enhanced_loader, initialize_enhanced_models
+    from enhanced_model_loader import EnhancedModelLoader, initialize_enhanced_models
     from qnn_modified import QNNModified
     from rqn_model import RQNModel
 except ImportError as e:
-    print(f"Import error: {e}")
+    logger.error(f"Error importing enhanced model loader: {e}")
     enhanced_loader = None
     QNNModified = None
     RQNModel = None
@@ -34,7 +34,8 @@ try:
     from simple_model_loader import get_simple_loader
     simple_loader = get_simple_loader()
 except ImportError as e:
-    print(f"Simple loader import error: {e}")
+    logger.error(f"Simple loader import error: {e}")
+    simple_loader = None
     simple_loader = None
 
 # Setup logging
@@ -55,6 +56,13 @@ def web_interface():
 def health_check():
     """Health check endpoint for Docker"""
     return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}, 200
+
+@app.route('/debug/files')
+def debug_files():
+    """Debug endpoint to check files in container"""
+    import os
+    files = os.listdir('.')
+    return {"files": files, "cwd": os.getcwd(), "model_files": [f for f in files if f.endswith(('.keras', '.pkl', '.h5', '.joblib'))]}
 
 # Initialize Flask-RESTX
 api = Api(app, version='3.0', title='Enhanced Dual Model Volatility Prediction API',
@@ -85,12 +93,12 @@ training_data = api.model('TrainingData', {
 })
 
 # Global variables
-if enhanced_loader:
-    try:
-        initialize_enhanced_models()
-        logger.info("Enhanced models initialized")
-    except Exception as e:
-        logger.error(f"Error initializing enhanced models: {e}")
+enhanced_loader = None
+try:
+    initialize_enhanced_models()
+    logger.info("Enhanced models initialized")
+except Exception as e:
+    logger.error(f"Error initializing enhanced models: {e}")
 
 
 @model_ns.route('/status')
@@ -228,13 +236,20 @@ class ModelPrediction(Resource):
             if not input_data:
                 return {'error': 'data field is required'}, 400
             
-            # Choose loader - prioritize simple loader for reliability
-            if simple_loader:
-                loader = simple_loader
-            elif enhanced_loader:
-                loader = enhanced_loader
-            else:
-                return {'error': 'No model loader available'}, 500
+            # Choose loader - try enhanced loader first, then fallback to simple loader
+            try:
+                if enhanced_loader:
+                    loader = enhanced_loader
+                    logger.info("Using enhanced loader")
+                else:
+                    raise Exception("Enhanced loader not available")
+            except Exception as e:
+                logger.error(f"Enhanced loader failed: {e}")
+                if simple_loader:
+                    loader = simple_loader
+                    logger.info("Falling back to simple loader")
+                else:
+                    return {'error': 'No model loader available'}, 500
             
             # Verify model is loaded before proceeding
             if model_type and not loader.is_model_loaded(model_type):
@@ -257,7 +272,30 @@ class ModelPrediction(Resource):
                 if input_array.shape[1] != len(features):
                     return {'error': f'Input dimension mismatch: expected {len(features)} features, got {input_array.shape[1]}'}, 400
                 
+                # Create DataFrame with engineered features
                 df = pd.DataFrame(input_array, columns=features[:input_array.shape[1]])
+                
+                # Add engineered features if missing
+                if target_model_type in ['qnn_modified', 'rnn']:
+                    # Add missing engineered features for QNN/RNN
+                    if len(features) >= 2:  # lag1, lag2
+                        df['ret_sq'] = df['lag1'] ** 2
+                        df['vol_lag2'] = df['lag2'] ** 2
+                    if len(features) >= 4:  # lag1, lag2, vol_lag1, vol_lag2
+                        df['std5'] = df['lag1'].rolling(window=5).std().iloc[-1]
+                        df['ma5'] = df['lag1'].rolling(window=5).mean().iloc[-1]
+                    if len(features) >= 8:  # lag1, lag2, vol_lag1, vol_lag2, ret_abs, ma5
+                        df['ma20'] = df['lag1'].rolling(window=20).mean().iloc[-1]
+                        df['std20'] = df['lag1'].rolling(window=20).std().iloc[-1]
+                        df['vol_lag1'] = df['lag1']  # Already exists
+                elif target_model_type == 'rqn':
+                    # RQL needs different engineered features
+                    if len(features) >= 2:  # return, lag1, lag2
+                        df['ret_sq'] = df['lag1'] ** 2
+                    if len(features) >= 6:  # return, lag1, lag2, ret_abs
+                        df['ma5'] = df['lag1'].rolling(window=5).mean().iloc[-1]
+                        df['ma20'] = df['lag1'].rolling(window=20).mean().iloc[-1]
+                        df['std5'] = df['lag1'].rolling(window=5).std().iloc[-1]
                 
             except Exception as conversion_error:
                 logger.error(f"Input conversion error: {conversion_error}")
