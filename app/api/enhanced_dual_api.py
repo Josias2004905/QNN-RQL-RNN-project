@@ -19,6 +19,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 sys.path.append('../..')
 sys.path.append('../../model')
 
+# Setup logging - IMPORTANT: Define logger BEFORE using it
+import logging
+logger = logging.getLogger(__name__)
+
 # Import enhanced model loader
 try:
     from enhanced_model_loader import EnhancedModelLoader, initialize_enhanced_models
@@ -38,9 +42,8 @@ except ImportError as e:
     logger.error(f"Simple loader import error: {e}")
     simple_loader = None
 
-# Setup logging
+# Setup logging configuration
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Initialize Flask app with static folder
 app = Flask(__name__, template_folder='../templates', static_folder='../static', static_url_path='/static')
