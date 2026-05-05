@@ -93,6 +93,52 @@ def web_interface():
     """Serve the web interface"""
     return render_template('enterprise_dashboard_dual.html')
 
+@app.route('/debug/files', methods=['GET'])
+def debug_files():
+    """Debug endpoint to list files in container"""
+    import os
+    files = {}
+    
+    # List files in current directory
+    files['current_dir'] = os.listdir('.')
+    files['parent_dir'] = os.listdir('..')
+    files['root_dir'] = os.listdir('../..')
+    
+    # Check for model files
+    model_files = []
+    for root, dirs, filenames in os.walk('../..'):
+        for filename in filenames:
+            if filename.endswith(('.keras', '.pkl', '.joblib')):
+                model_files.append(os.path.join(root, filename))
+    
+    files['model_files'] = model_files
+    
+    # Check specific model paths
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(current_dir))
+    
+    files['debug_paths'] = {
+        'current_dir': current_dir,
+        'project_root': project_root,
+        'qnn_files': [
+            os.path.join(project_root, "model_qnn_modified_0.1.keras"),
+            os.path.join(project_root, "model_qnn_modified_0.5.keras"),
+            os.path.join(project_root, "model_qnn_modified_0.9.keras")
+        ],
+        'rql_files': [
+            os.path.join(project_root, "rqn_models.pkl"),
+            os.path.join(project_root, "scaler_rqn.pkl")
+        ],
+        'qnn_scaler': os.path.join(project_root, "scaler_qnn_modified.pkl")
+    }
+    
+    # Check if files exist
+    files['file_existence'] = {}
+    for file_path in files['debug_paths']['qnn_files'] + files['debug_paths']['rql_files'] + [files['debug_paths']['qnn_scaler']]:
+        files['file_existence'][file_path] = os.path.exists(file_path)
+    
+    return jsonify(files)
+
 @app.route('/api/models/select', methods=['POST'])
 def select_model():
     """Select active model"""
