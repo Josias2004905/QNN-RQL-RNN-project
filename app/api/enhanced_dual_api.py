@@ -14,8 +14,9 @@ import numpy as np
 from typing import Dict, Optional, List, Union
 
 # Add parent directories to path for imports
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'core'))
 sys.path.append('../..')
-sys.path.append('../core')
 sys.path.append('../../model')
 
 # Import enhanced model loader
@@ -35,7 +36,6 @@ try:
     simple_loader = get_simple_loader()
 except ImportError as e:
     logger.error(f"Simple loader import error: {e}")
-    simple_loader = None
     simple_loader = None
 
 # Setup logging
