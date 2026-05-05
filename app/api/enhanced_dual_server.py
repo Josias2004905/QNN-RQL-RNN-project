@@ -235,12 +235,29 @@ def generate_shap_explanation(data, model_type):
 
 def generate_qnn_shap_explanation(data):
     """Generate QNN SHAP explanation using KernelExplainer logic"""
+    import numpy as np
+    
     feature_importance = {}
     
     if data:
-        for feature, value in data.items():
+        # Convert data to proper format if it's a list/array
+        if 'data' in data and isinstance(data['data'], list):
+            # If data is in {'data': [values]} format, convert to feature dict
+            input_values = data['data']
+            feature_names = ['lag1', 'lag2', 'vol_lag1', 'vol_lag2', 'ret_abs', 'ret_sq', 'ma5', 'ma20', 'std5', 'std20']
+            data_dict = dict(zip(feature_names, input_values))
+        else:
+            data_dict = data
+        
+        for feature, value in data_dict.items():
+            # Convert to numpy array and ensure it's a scalar
+            if isinstance(value, list):
+                value = np.array(value)
+            if hasattr(value, 'item'):  # numpy scalar
+                value = value.item()
+            
             # QNN-specific importance calculation
-            importance = abs(value) * random.uniform(0.5, 1.5)
+            importance = abs(float(value)) * random.uniform(0.5, 1.5)
             # Add some feature-specific biases for QNN
             if 'lag' in feature:
                 importance *= 1.2  # Lags are more important for QNN
@@ -267,12 +284,29 @@ def generate_rnn_shap_explanation(data):
     Generate RNN SHAP explanation using GradientExplainer logic
     Optimized for RNN/LSTM models
     """
+    import numpy as np
+    
     feature_importance = {}
     
     if data:
-        for feature, value in data.items():
+        # Convert data to proper format if it's a list/array
+        if 'data' in data and isinstance(data['data'], list):
+            # If data is in {'data': [values]} format, convert to feature dict
+            input_values = data['data']
+            feature_names = ['lag1', 'lag2', 'vol_lag1', 'vol_lag2', 'ret_abs', 'ret_sq', 'ma5', 'ma20', 'std5', 'std20']
+            data_dict = dict(zip(feature_names, input_values))
+        else:
+            data_dict = data
+        
+        for feature, value in data_dict.items():
+            # Convert to numpy array and ensure it's a scalar
+            if isinstance(value, list):
+                value = np.array(value)
+            if hasattr(value, 'item'):  # numpy scalar
+                value = value.item()
+            
             # RNN-specific importance calculation
-            importance = abs(value) * random.uniform(0.4, 1.2)
+            importance = abs(float(value)) * random.uniform(0.7, 1.3)
             # Add RNN-specific biases
             if 'ret' in feature:
                 importance *= 1.3  # Returns are more important for RNN
@@ -301,29 +335,45 @@ def generate_fallback_shap_explanation(data, model_type):
     """
     Generate fallback SHAP explanation when main calculation fails
     """
+    import numpy as np
     logger.warning(f"Using fallback SHAP explanation for {model_type}")
     
     # Generate deterministic feature importance based on input
     feature_importance = {}
     
     if data:
-        # Use absolute values with model-specific weighting
-        for feature, value in data.items():
-            base_importance = abs(value) * 0.8
+        # Convert data to proper format if it's a list/array
+        if 'data' in data and isinstance(data['data'], list):
+            # If data is in {'data': [values]} format, convert to feature dict
+            input_values = data['data']
+            feature_names = ['lag1', 'lag2', 'vol_lag1', 'vol_lag2', 'ret_abs', 'ret_sq', 'ma5', 'ma20', 'std5', 'std20']
+            data_dict = dict(zip(feature_names, input_values))
+        else:
+            data_dict = data
+        
+        for feature, value in data_dict.items():
+            # Convert to numpy array and ensure it's a scalar
+            if isinstance(value, list):
+                value = np.array(value)
+            if hasattr(value, 'item'):  # numpy scalar
+                value = value.item()
+            
+            # Simple deterministic calculation
+            importance = abs(float(value)) * 0.8
             
             # Model-specific adjustments
             if model_type == 'qnn':
                 if 'lag' in feature:
-                    base_importance *= 1.2
+                    importance *= 1.2
                 elif 'std' in feature:
-                    base_importance *= 1.1
+                    importance *= 1.1
             else:  # RNN
                 if 'ret' in feature:
-                    base_importance *= 1.3
+                    importance *= 1.3
                 elif 'ma' in feature:
-                    base_importance *= 1.15
+                    importance *= 1.15
                     
-            feature_importance[feature] = round(base_importance, 4)
+            feature_importance[feature] = round(importance, 4)
     else:
         # Fallback defaults
         if model_type == 'qnn':
