@@ -25,10 +25,21 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 # Import enhanced model loader
 try:
+    logger.info("Attempting to import enhanced_model_loader...")
     from enhanced_model_loader import EnhancedModelLoader, initialize_enhanced_models
+    logger.info("✅ enhanced_model_loader imported successfully")
+    
+    logger.info("Attempting to import qnn_modified...")
     from qnn_modified import QNNModified
+    logger.info("✅ qnn_modified imported successfully")
+    
+    logger.info("Attempting to import rqn_model...")
     from rqn_model import RQNModel
+    logger.info("✅ rqn_model imported successfully")
+    
+    logger.info("Initializing enhanced models...")
     enhanced_loader = initialize_enhanced_models()
+    logger.info("✅ Enhanced models initialized")
     
     # Log model loading status
     if enhanced_loader:
@@ -53,7 +64,17 @@ try:
         logger.error("Enhanced model loader initialization failed")
         
 except ImportError as e:
-    logger.error(f"Error importing enhanced model loader: {e}")
+    logger.error(f"❌ Error importing enhanced model loader: {e}")
+    logger.error(f"❌ ImportError type: {type(e)}")
+    logger.error(f"❌ ImportError args: {e.args}")
+    enhanced_loader = None
+    QNNModified = None
+    RQNModel = None
+    
+except Exception as e:
+    logger.error(f"❌ Unexpected error during imports: {e}")
+    logger.error(f"❌ Error type: {type(e)}")
+    logger.error(f"❌ Error args: {e.args}")
     enhanced_loader = None
     QNNModified = None
     RQNModel = None
