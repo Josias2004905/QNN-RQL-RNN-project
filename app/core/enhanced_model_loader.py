@@ -35,10 +35,12 @@ try:
     logger.info(f"✅ RNNPredictor: {RNNPredictor}")
 
 except ImportError as e:
-    logger.error(f"❌ Could not import model classes: {e}")
+    import traceback
+    logger.error(f"❌ Could not import model classes: {str(e)}")
     logger.error(f"❌ Current directory: {current_dir}")
     logger.error(f"❌ Project root: {project_root}")
     logger.error(f"❌ Model directory: {model_dir}")
+    logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
     QNNModified = None
     RQNModel = None
     RNNPredictor = None
@@ -281,6 +283,15 @@ enhanced_loader = EnhancedModelLoader()
 
 def initialize_enhanced_models():
     """Initialize all models if available"""
+    import sys
+    import os
+    
+    # Logs de démarrage complets
+    logger.info(f"=== STARTUP: Python path = {sys.path}")
+    logger.info(f"=== STARTUP: Working dir = {os.getcwd()}")
+    logger.info(f"=== STARTUP: Files in root = {os.listdir('.')}")
+    logger.info(f"=== STARTUP: Files in model/ = {os.listdir('model') if os.path.exists('model') else 'NOT FOUND'}")
+    
     success = True
 
     if not enhanced_loader.load_qnn_modified():

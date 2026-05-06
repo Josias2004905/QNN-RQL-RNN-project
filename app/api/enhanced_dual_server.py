@@ -61,15 +61,19 @@ try:
         logger.error("Enhanced model loader initialization failed")
         
 except ImportError as e:
-    logger.error(f"❌ Error importing enhanced model loader: {e}")
+    import traceback
+    logger.error(f"❌ Error importing enhanced model loader: {str(e)}")
     logger.error(f"❌ ImportError type: {type(e)}")
     logger.error(f"❌ ImportError args: {e.args}")
+    logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
     enhanced_loader = None
     
 except Exception as e:
-    logger.error(f"❌ Unexpected error during imports: {e}")
+    import traceback
+    logger.error(f"❌ Unexpected error during imports: {str(e)}")
     logger.error(f"❌ Error type: {type(e)}")
     logger.error(f"❌ Error args: {e.args}")
+    logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
     enhanced_loader = None
 
 # Initialize Flask app
@@ -199,7 +203,9 @@ def compare_models():
             'rql': rql_result
         }
     except Exception as e:
-        logger.error(f"Model comparison error: {e}")
+        import traceback
+        logger.error(f"Model comparison error: {str(e)}")
+        logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
         return {'error': f'Comparison error: {str(e)}'}, 500
 
 @app.route('/api/v1/health')
@@ -254,7 +260,9 @@ def explain():
         return result
         
     except Exception as e:
-        logger.error(f"SHAP explanation error for {current_model}: {e}")
+        import traceback
+        logger.error(f"SHAP explanation error for {current_model}: {str(e)}")
+        logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
         return {
             'error': f'SHAP explanation failed: {str(e)}',
             'model_used': current_model,
@@ -366,7 +374,9 @@ def generate_prediction(data, model_type):
         return result
         
     except Exception as e:
-        logger.error(f"Real model prediction error for {model_type}: {e}")
+        import traceback
+        logger.error(f"Real model prediction error for {model_type}: {str(e)}")
+        logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
         return generate_fallback_prediction(data, model_type)
 
 def generate_fallback_prediction(data, model_type):
