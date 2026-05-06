@@ -38,11 +38,12 @@ try:
     logger.info("✅ rqn_model imported successfully")
     
     logger.info("Initializing enhanced models...")
-    enhanced_loader = initialize_enhanced_models()
+    initialize_enhanced_models()  # Initialize models, don't reassign
+    enhanced_loader = EnhancedModelLoader()  # Get the loader object
     logger.info("✅ Enhanced models initialized")
     
     # Log model loading status
-    if enhanced_loader:
+    if enhanced_loader is not None:
         logger.info("Enhanced model loader initialized successfully")
         
         # Check individual model status
