@@ -19,11 +19,32 @@ sys.path.append('../core')
 sys.path.append('../../model')
 
 try:
+    # Try importing from model directory first
+    import sys
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(current_dir))
+    model_dir = os.path.join(project_root, 'model')
+    
+    if model_dir not in sys.path:
+        sys.path.insert(0, model_dir)
+    
     from qnn_modified import QNNModified, QuantileLoss
     from rqn_model import RQNModel
-    from predictor import RNNPredictor
+    
+    # Import predictor from core
+    from rnn_predictor import RNNPredictor
+    
+    logger.info(f"✅ Successfully imported all model classes")
+    logger.info(f"✅ QNNModified: {QNNModified}")
+    logger.info(f"✅ RQNModel: {RQNModel}")
+    logger.info(f"✅ RNNPredictor: {RNNPredictor}")
+    
 except ImportError as e:
-    logging.warning(f"Could not import model classes: {e}")
+    logger.error(f"❌ Could not import model classes: {e}")
+    logger.error(f"❌ Current directory: {os.path.dirname(os.path.abspath(__file__))}")
+    logger.error(f"❌ Project root: {os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))}")
+    logger.error(f"❌ Model directory: {os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'model')}")
     QNNModified = None
     RQNModel = None
     RNNPredictor = None

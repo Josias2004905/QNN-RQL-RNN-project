@@ -29,13 +29,9 @@ try:
     from enhanced_model_loader import EnhancedModelLoader, initialize_enhanced_models
     logger.info("✅ enhanced_model_loader imported successfully")
     
-    logger.info("Attempting to import qnn_modified...")
-    from qnn_modified import QNNModified
-    logger.info("✅ qnn_modified imported successfully")
-    
-    logger.info("Attempting to import rqn_model...")
-    from rqn_model import RQNModel
-    logger.info("✅ rqn_model imported successfully")
+    # The model classes are now imported inside enhanced_model_loader
+    # We don't need to import them separately here
+    logger.info("✅ Model classes will be imported through enhanced_model_loader")
     
     logger.info("Initializing enhanced models...")
     initialize_enhanced_models()  # Initialize models, don't reassign
@@ -69,16 +65,12 @@ except ImportError as e:
     logger.error(f"❌ ImportError type: {type(e)}")
     logger.error(f"❌ ImportError args: {e.args}")
     enhanced_loader = None
-    QNNModified = None
-    RQNModel = None
     
 except Exception as e:
     logger.error(f"❌ Unexpected error during imports: {e}")
     logger.error(f"❌ Error type: {type(e)}")
     logger.error(f"❌ Error args: {e.args}")
     enhanced_loader = None
-    QNNModified = None
-    RQNModel = None
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='../templates')
