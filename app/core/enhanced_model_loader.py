@@ -297,7 +297,7 @@ def initialize_enhanced_models():
     elif enhanced_loader.is_model_loaded('rnn'):
         enhanced_loader.set_active_model('rnn')
     
-    return success
+    return enhanced_loader  # ← RETOURNER L'OBJET, PAS LE BOOLÉEN !
 
 
 def get_enhanced_loader():
